@@ -4,18 +4,22 @@ import matplotlib.pyplot as plt
 ### Define parameters ###
 # Time [s]
 t_min = 0
-t_max = 150000
-t_step = 10
+t_max = 11760
+t_step = 0.1
 
 # Temperature [°C]
-T_min = 19
-T_max = 24
+T_min = 15
+T_max = 45
 T_num_levels = 4    # number of T levels per CH4 level
 
-# Humidity [%]
+# Relative Humidity [%]
 H_min = 0
 H_max = 100
 H_num_levels = 4    # number of H levels per T level
+
+# Pressure [Bar]
+P_min = 2.5
+P_max = 3.2
 
 ##############################################################################################
 
