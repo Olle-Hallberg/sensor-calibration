@@ -1,93 +1,240 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import sklearn.neighbors as skl_nb
-import sklearn.preprocessing as skl_pre
-import sklearn.model_selection as skl_ms
-import sklearn.metrics as skl_met
 
-###### data ######
-df = pd.read_csv('training_data_VT2026.csv')  # create dataframe
-
-X = df.drop(columns=['increase_stock']) # features
-y = df['increase_stock']                # demand
+from sklearn.model_selection import train_test_split, KFold, ParameterGrid
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 
-### tuning ###
-# best k through 10-fold cross-validation
-def n_fold_cross_val(X, y, n_folds, num_k, random_state):
-  cv = skl_ms.StratifiedKFold(n_splits=n_folds, random_state=random_state, shuffle=True)  # train/validation indices
-  K = np.arange(1, num_k+1)                                                               # k values
-  mis = np.zeros(len(K))                                                                  # misclassification
-
-  for train_index, val_index in cv.split(X, y):
-    # acquire test and validation data
-    X_train, X_val = X.iloc[train_index], X.iloc[val_index]
-    y_train, y_val = y.iloc[train_index], y.iloc[val_index]
-
-    # scale data
-    scaler = skl_pre.StandardScaler().fit(X_train)
-
-    X_train_scaled = scaler.transform(X_train)
-    X_val_scaled = scaler.transform(X_val)
-
-    # test all k for current fold
-    for j, k in enumerate(K):
-      model = skl_nb.KNeighborsClassifier(n_neighbors=k)
-      model.fit(X_train_scaled, y_train)
-      prediction = model.predict(X_val_scaled)
-      mis[j] += np.mean(prediction != y_val)  # store misclassification for current fold and k
-
-  mis /= n_folds # devide by 10 scince mis incliudes sum of misclassification from 10 folds
-  best_k = K[np.argmin(mis)]
-
-  return(best_k, mis)
-
-# plot and print tuning result
-best_k, mis = n_fold_cross_val(X, y, n_folds=10, num_k=200, random_state=42)
-print(f'Best k: {best_k}')
-
-K = np.arange(1, 201)
-plt.plot(K, mis)
-plt.xlabel('Number of neighbors k')
-plt.xticks(fontsize=11)
-plt.ylabel('Validation error')
-plt.yticks(fontsize=11)
-# plt.show()  # uncomment to plot
+# #seed
+np.random.seed(1)
 
 
-###### evaluation ######
-# scaled train and test data
-np.random.seed(42)
-trainI = np.random.choice(1600, 1280, replace=False)
-trainIndex = df.index.isin(trainI)
-train = df.iloc[trainIndex] # training set (80%)
-test = df.iloc[~trainIndex] # test set (20%)
+# #model
+def build_knn_model(params):
+    model = KNeighborsRegressor(
+        n_neighbors=params["n_neighbors"],
+        weights=params["weights"],
+        metric=params["metric"]
+    )
+    return model
 
-X_train = train.drop(columns=['increase_stock'])
-y_train = train["increase_stock"]
-X_test = test.drop(columns=["increase_stock"])
-y_test = test["increase_stock"]
 
-scaler = skl_pre.StandardScaler().fit(X_train)
-X_train_scaled = scaler.transform(X_train)
-X_test_scaled = scaler.transform(X_test)
+# #train
+def train_model(model, X_train, y_train):
+    model.fit(X_train, y_train)
+    return model
 
-# implement model
-model = skl_nb.KNeighborsClassifier(n_neighbors=best_k)
-model.fit(X_train_scaled, y_train)
-prediction = model.predict(X_test_scaled)
 
-# confusion matrix
-print("Confusion Matrix:\n")
-print(pd.crosstab(prediction, y_test), "\n")
+# #predict
+def predict_model(model, X):
+    return model.predict(X)
 
-CM = skl_met.confusion_matrix(y_test, prediction, labels=model.classes_)
-disp = skl_met.ConfusionMatrixDisplay(confusion_matrix=CM, display_labels=model.classes_)
-disp.plot(cmap="Blues")
+
+# #load
+data = pd.read_csv("gas_sensor_data.csv")
+
+
+# #target
+target_column = "methane_ppm"
+feature_columns = ["sensorsignal", "pressure", "humidity", "temperature"]
+
+
+# #select
+X = data[feature_columns]
+y = data[target_column]
+
+
+# #clean
+valid_idx = X.notna().all(axis=1) & y.notna()
+X = X.loc[valid_idx].copy()
+y = y.loc[valid_idx].copy()
+
+
+# #split
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.25,
+    random_state=1
+)
+
+
+# #final_scale
+x_scaler = StandardScaler()
+X_train_scaled = x_scaler.fit_transform(X_train)
+X_test_scaled = x_scaler.transform(X_test)
+
+
+# #grid
+param_grid = {
+    # n_neighbors -> number of neighbors
+    # weights -> uniform or distance weighting
+    # metric -> distance metric
+    "n_neighbors": list(range(1, 201)),
+    "weights": ["uniform", "distance"],
+    "metric": ["euclidean", "manhattan"]
+}
+
+
+# #cv
+cv = KFold(n_splits=5, shuffle=True, random_state=1)
+
+best_score = np.inf
+best_params = None
+search_results = []
+
+all_param_combinations = list(ParameterGrid(param_grid))
+total_runs = len(all_param_combinations)
+
+print("Starting KNN Regression hyperparameter search...\n")
+
+
+# #search
+for run_number, params in enumerate(all_param_combinations, start=1):
+    cv_scores = []
+
+    for train_idx, val_idx in cv.split(X_train):
+        # #fold_split
+        X_cv_train_raw = X_train.iloc[train_idx]
+        X_cv_val_raw = X_train.iloc[val_idx]
+        y_cv_train = y_train.iloc[train_idx]
+        y_cv_val = y_train.iloc[val_idx]
+
+        # #fold_scale
+        x_scaler_cv = StandardScaler()
+        X_cv_train_scaled = x_scaler_cv.fit_transform(X_cv_train_raw)
+        X_cv_val_scaled = x_scaler_cv.transform(X_cv_val_raw)
+
+        model = build_knn_model(params)
+
+        train_model(
+            model=model,
+            X_train=X_cv_train_scaled,
+            y_train=y_cv_train
+        )
+
+        y_val_pred = predict_model(model, X_cv_val_scaled)
+        y_val_true = y_cv_val.values
+
+        fold_mae = mean_absolute_error(y_val_true, y_val_pred)
+        cv_scores.append(fold_mae)
+
+    mean_cv_score = np.mean(cv_scores)
+
+    search_results.append({
+        "n_neighbors": params["n_neighbors"],
+        "weights": params["weights"],
+        "metric": params["metric"],
+        "cv_mae": mean_cv_score
+    })
+
+    if mean_cv_score < best_score:
+        best_score = mean_cv_score
+        best_params = params
+        print(
+            f"[{run_number}/{total_runs}] New best -> "
+            f"MAE = {best_score:.3f} ppm, params = {best_params}"
+        )
+
+
+# #savegrid
+search_results_df = pd.DataFrame(search_results)
+search_results_df = search_results_df.sort_values("cv_mae", ascending=True)
+search_results_df.to_csv("hyperparameter_results_knn_regression.csv", index=False)
+
+print("\nBest hyperparameters:")
+print(best_params)
+print(f"\nBest CV MAE: {best_score:.3f} ppm")
+
+
+# #finalmodel
+best_model = build_knn_model(best_params)
+
+train_model(
+    model=best_model,
+    X_train=X_train_scaled,
+    y_train=y_train
+)
+
+
+# #testpred
+y_pred = predict_model(best_model, X_test_scaled)
+
+
+# #metrics
+mae = mean_absolute_error(y_test, y_pred)
+rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+r2 = r2_score(y_test, y_pred)
+
+print(f"\nResults for target: {target_column}")
+print(f"MAE  = {mae:.3f} ppm")
+print(f"RMSE = {rmse:.3f} ppm")
+print(f"R²   = {r2:.3f}")
+
+
+# #savetest
+test_results = pd.DataFrame({
+    "True_ppm": y_test.values,
+    "Predicted_ppm": y_pred
+})
+
+print("\nFirst 10 test predictions:")
+print(test_results.head(10))
+
+test_results.to_csv(
+    f"predictions_test_{target_column}_knn_regression.csv",
+    index=False
+)
+
+
+# #saveall
+X_all_scaled = x_scaler.transform(X)
+y_all_pred = predict_model(best_model, X_all_scaled)
+
+all_results = pd.DataFrame({
+    "sensorsignal": X["sensorsignal"].values,
+    "pressure": X["pressure"].values,
+    "humidity": X["humidity"].values,
+    "temperature": X["temperature"].values,
+    "True_ppm": y.values,
+    "Predicted_ppm": y_all_pred
+})
+
+all_results.to_csv(
+    f"predictions_all_{target_column}_knn_regression.csv",
+    index=False
+)
+
+
+# #plot_timeseries
+all_plot_df = all_results.copy()
+all_plot_df = all_plot_df.sort_index()
+
+x_axis = np.arange(len(all_plot_df))
+
+plt.figure(figsize=(14, 6))
+
+plt.plot(
+    x_axis,
+    all_plot_df["True_ppm"].values,
+    label="reference"
+)
+
+plt.plot(
+    x_axis,
+    all_plot_df["Predicted_ppm"].values,
+    label="calibrated CH4 concentration"
+)
+
+plt.xlabel("Sample index")
+plt.ylabel("CH4 concentration (ppm)")
+plt.title(f"Temperature Compensation (KNN Regression)\nR² = {r2:.3f}")
+
+plt.legend(loc="upper right")
+
 plt.tight_layout()
-# plt.show()  # uncomment to plot
-
-# accuracy
-print(f"Accuracy: {np.mean(prediction == y_test)}")
-print("F1 macro:", skl_met.f1_score(y_test, prediction, average="macro"))
+plt.savefig(f"time_series_all_{target_column}_knn_regression.png", dpi=300)
+plt.show()
