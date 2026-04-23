@@ -1,1 +1,135 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.preprocessing import StandardScaler
+
+from scipy.interpolate import LinearNDInterpolator
+
+
+# #seed
+np.random.seed(1)
+
+
+# #model
+class PiecewiseLinearGasInterpolator:
+    def __init__(self):
+        self.linear_interpolator = None
+
+    def fit(self, X_train, y_train):
+        # #linear_interp
+        self.linear_interpolator = LinearNDInterpolator(X_train, y_train)
+
+    def predict(self, X):
+        # #linear_pred (kan ge NaN utanför convex hull)
+        return self.linear_interpolator(X)
+
+
+# #load
+data = pd.read_csv("gas_sensor_data.csv")
+
+# #target
+target_column = "methane_ppm"
+feature_columns = ["sensorsignal", "pressure", "humidity", "temperature"]
+
+# #select
+X = data[feature_columns]
+y = data[target_column]
+
+# #clean
+valid_idx = X.notna().all(axis=1) & y.notna()
+X = X.loc[valid_idx].copy()
+y = y.loc[valid_idx].copy()
+
+# #split
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.25,
+    random_state=1
+)
+
+# #scale
+x_scaler = StandardScaler()
+X_train_scaled = x_scaler.fit_transform(X_train)
+X_test_scaled = x_scaler.transform(X_test)
+
+# #model_fit
+interp_model = PiecewiseLinearGasInterpolator()
+interp_model.fit(X_train_scaled, y_train.values)
+
+# #testpred
+y_pred = interp_model.predict(X_test_scaled)
+
+# #hantera NaN för metrics (nödvändigt nu)
+valid_mask = ~np.isnan(y_pred)
+
+y_test_valid = y_test.values[valid_mask]
+y_pred_valid = y_pred[valid_mask]
+
+# #metrics
+mae = mean_absolute_error(y_test_valid, y_pred_valid)
+rmse = np.sqrt(mean_squared_error(y_test_valid, y_pred_valid))
+r2 = r2_score(y_test_valid, y_pred_valid)
+
+print(f"\nResults for target: {target_column}")
+print(f"MAE  = {mae:.3f} ppm")
+print(f"RMSE = {rmse:.3f} ppm")
+print(f"R²   = {r2:.3f}")
+
+# #savetest
+test_results = pd.DataFrame({
+    "True_ppm": y_test.values,
+    "Predicted_ppm": y_pred
+})
+
+print("\nFirst 10 test predictions:")
+print(test_results.head(10))
+
+test_results.to_csv(f"predictions_test_{target_column}_piecewise_linear.csv", index=False)
+
+# #saveall
+X_all_scaled = x_scaler.transform(X)
+y_all_pred = interp_model.predict(X_all_scaled)
+
+all_results = pd.DataFrame({
+    "sensorsignal": X["sensorsignal"].values,
+    "pressure": X["pressure"].values,
+    "humidity": X["humidity"].values,
+    "temperature": X["temperature"].values,
+    "True_ppm": y.values,
+    "Predicted_ppm": y_all_pred
+})
+
+all_results.to_csv(f"predictions_all_{target_column}_piecewise_linear.csv", index=False)
+
+# #plot_timeseries
+all_plot_df = all_results.copy()
+all_plot_df = all_plot_df.sort_index()
+
+x_axis = np.arange(len(all_plot_df))
+
+plt.figure(figsize=(14, 6))
+
+plt.plot(
+    x_axis,
+    all_plot_df["True_ppm"].values,
+    label="reference"
+)
+
+plt.plot(
+    x_axis,
+    all_plot_df["Predicted_ppm"].values,
+    label="piecewise linear interpolated CH4 concentration"
+)
+
+plt.xlabel("Sample index")
+plt.ylabel("CH4 concentration (ppm)")
+plt.title(f"Piecewise Linear Interpolation\nR² = {r2:.3f}")
+
+plt.legend()
+plt.tight_layout()
+plt.savefig(f"time_series_all_{target_column}_piecewise_linear.png", dpi=300)
+plt.show()
