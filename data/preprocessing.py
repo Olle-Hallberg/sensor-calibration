@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 ### DataFrame ###
-# df = pd.read_csv('data/preprocessed/teknisk_luft/data_teknisk_luft.csv')
+df = pd.read_csv('data/preprocessed/teknisk_luft/data_teknisk_luft.csv')
 # print(f'data.shape: {df.shape}')
 # df.info()
 # print(df.describe())
