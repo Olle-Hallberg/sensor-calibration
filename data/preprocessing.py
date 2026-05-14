@@ -1,26 +1,31 @@
-import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
-### DataFrame ###
-df = pd.read_csv('data/preprocessed/teknisk_luft/data_teknisk_luft.csv')
-# print(f'data.shape: {df.shape}')
-# df.info()
-# print(df.describe())
-# print(df.head())
+# Läs in filerna
+df = pd.read_csv("data/preprocessed/test_data.csv")
 
-### Concentration calculations ###
-C_air = ((df['mpx5500_pressure_hpa'] + 1013) * 100) / (8.314 * (df['rh_temp_c'] + 273.15))
-C_CH4 = 1967.2/1000 * C_air
-C_CO2 = 435.8 * C_air
+df["lgr_ch4_ppm"] = (df["lgr_ch4_ppb"]/1000).round(7)
 
-### Concentration columns ###
-df['ch4_conc_mol_m3'] = C_CH4
-df['co2_conc_mol_m3'] = C_CO2
+df.to_csv("data/preprocessed/test_data.csv", index=False)
 
-### reference gas molar fraction ###
-df['ch4_ppm'] = 1967.2/1000
-df['co2_ppm'] = 435.8
+# # Starttid för fil 1
+# start_time = pd.Timestamp("2026-05-11 21:18:06")
 
-### Save ###
-# df.to_csv('data/preprocessed/teknisk_luft/data_teknisk_luft.csv', index=False)
+# # Gör elapsed_time till riktig tid
+# file1["elapsed_time"] = pd.to_timedelta(file1["elapsed_time"])
+
+# # Skapa absoluta timestamps
+# file1["TIMESTAMP"] = start_time + file1["elapsed_time"]
+
+# # Konvertera timestamps i fil 2
+# file2["TIMESTAMP"] = pd.to_datetime(file2["TIMESTAMP"])
+
+# # Lägg till LGR-kolumner genom timestamp-matchning
+# merged = pd.merge(
+#     file1,
+#     file2[["TIMESTAMP", "LGR_CH4", "LGR_CO2"]],
+#     on="TIMESTAMP",
+#     how="left"
+# )
+
+# # Spara ny fil
+# merged.to_csv("data/preprocessed/test/night_merged.csv", index=False)
