@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 
 from sklearn.model_selection import KFold, ParameterGrid, train_test_split
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.preprocessing import StandardScaler
 
 from xgboost import XGBRegressor
 
@@ -29,8 +30,8 @@ TEST_FILE = "test_data.csv"
 # Settings for random search
 # ============================================================
 
-N_ITER_STAGE1 = 50
-N_ITER_STAGE2 = 50
+N_ITER_STAGE1 = 500
+N_ITER_STAGE2 = 500
 
 
 # ============================================================
@@ -216,7 +217,7 @@ def filter_test_data(
 
 
 # ============================================================
-# Random search hyperparameter evaluation
+# Random search hyperparameter evaluation with normalization
 # ============================================================
 
 def evaluate_random_search(
@@ -268,21 +269,41 @@ def evaluate_random_search(
             cv.split(X_train_raw),
             start=1
         ):
-            X_cv_train = X_train_raw.iloc[train_idx].copy()
-            X_cv_val = X_train_raw.iloc[val_idx].copy()
+            X_cv_train_raw = X_train_raw.iloc[train_idx].copy()
+            X_cv_val_raw = X_train_raw.iloc[val_idx].copy()
 
             y_cv_train = y_train_raw.iloc[train_idx].copy()
             y_cv_val = y_train_raw.iloc[val_idx].copy()
 
+            # ============================================================
+            # Normalize features inside each CV fold
+            # Important: fit scaler only on the CV training fold
+            # ============================================================
+
+            scaler = StandardScaler()
+
+            X_cv_train_scaled = scaler.fit_transform(X_cv_train_raw)
+            X_cv_val_scaled = scaler.transform(X_cv_val_raw)
+
+            X_cv_train_scaled = pd.DataFrame(
+                X_cv_train_scaled,
+                columns=X_train_raw.columns
+            )
+
+            X_cv_val_scaled = pd.DataFrame(
+                X_cv_val_scaled,
+                columns=X_train_raw.columns
+            )
+
             models = train_xgboost_multioutput(
-                X_train=X_cv_train,
+                X_train=X_cv_train_scaled,
                 y_train=y_cv_train,
                 params=params
             )
 
             y_val_pred = predict_xgboost_multioutput(
                 models=models,
-                X=X_cv_val,
+                X=X_cv_val_scaled,
                 target_columns=target_columns
             )
 
@@ -739,7 +760,7 @@ search_results_df = search_results_df.sort_values(
 )
 
 search_results_df.to_csv(
-    "hyperparameter_results_xgboost_combined_shuffled_80_20.csv",
+    "hyperparameter_results_xgboost_combined_shuffled_80_20_normalized.csv",
     index=False
 )
 
@@ -750,23 +771,79 @@ print(top_results.to_string(index=False))
 
 
 # ============================================================
-# Final training on 80 % of combined scrambled dataset
+# Final normalization
+# ============================================================
+# Important:
+# The scaler is fitted only on the final training set.
+# The same scaler is then used to transform the held-out test set.
+
+final_scaler = StandardScaler()
+
+X_train_scaled = final_scaler.fit_transform(X_train_raw)
+X_test_scaled = final_scaler.transform(X_test_raw)
+
+X_train_scaled = pd.DataFrame(
+    X_train_scaled,
+    columns=feature_columns
+)
+
+X_test_scaled = pd.DataFrame(
+    X_test_scaled,
+    columns=feature_columns
+)
+
+
+# ============================================================
+# Save normalized train/test features for inspection
+# ============================================================
+
+normalized_train_data = X_train_scaled.copy()
+normalized_train_data[target_columns] = y_train_raw[target_columns].copy()
+normalized_train_data["source_file"] = source_train.values
+
+normalized_test_data = X_test_scaled.copy()
+normalized_test_data[target_columns] = y_test_raw[target_columns].copy()
+normalized_test_data["source_file"] = source_test.values
+
+normalized_train_data.to_csv(
+    "normalized_training_features_xgboost.csv",
+    index=False
+)
+
+normalized_test_data.to_csv(
+    "normalized_test_features_xgboost.csv",
+    index=False
+)
+
+print("\nFeature normalization:")
+print("StandardScaler was fitted on the final 80 % training set.")
+print("The same scaler was used to transform the 20 % held-out test set.")
+
+print("\nMean of normalized training features:")
+print(X_train_scaled.mean())
+
+print("\nStandard deviation of normalized training features:")
+print(X_train_scaled.std())
+
+
+# ============================================================
+# Final training on normalized 80 % of combined scrambled dataset
 # ============================================================
 
 best_models = train_xgboost_multioutput(
-    X_train=X_train_raw,
+    X_train=X_train_scaled,
     y_train=y_train_raw,
     params=best_params
 )
 
 
 # ============================================================
-# Prediction on 20 % held-out test set
+# Prediction on normalized 20 % held-out test set
 # ============================================================
 
 y_pred = predict_xgboost_multioutput(
     models=best_models,
-    X=X_test_raw,
+    X=X_test_scaled,
     target_columns=target_columns
 )
 
@@ -785,7 +862,7 @@ mae_co2 = mean_absolute_error(y_test_original[:, 1], y_pred[:, 1])
 rmse_co2 = np.sqrt(mean_squared_error(y_test_original[:, 1], y_pred[:, 1]))
 r2_co2 = r2_score(y_test_original[:, 1], y_pred[:, 1])
 
-print("\nResults on scrambled 20 % held-out test set:")
+print("\nResults on normalized scrambled 20 % held-out test set:")
 
 print(f"\nTarget: CH4 ppm")
 print(f"MAE  = {mae_ch4:.6f} ppm")
@@ -811,14 +888,19 @@ test_results = pd.DataFrame({
     "Predicted_CO2_ppm": y_pred[:, 1]
 })
 
+# Save original, unnormalized feature values
 for col in feature_columns:
-    test_results[col] = X_test_raw[col].values
+    test_results[f"{col}_original"] = X_test_raw[col].values
+
+# Save normalized feature values
+for col in feature_columns:
+    test_results[f"{col}_normalized"] = X_test_scaled[col].values
 
 print("\nFirst 10 test predictions:")
 print(test_results.head(10))
 
 test_results.to_csv(
-    "predictions_xgboost_combined_shuffled_20_percent_test.csv",
+    "predictions_xgboost_combined_shuffled_20_percent_test_normalized.csv",
     index=False
 )
 
@@ -864,14 +946,14 @@ ax.plot(
 ax.set_xlabel("Full shuffled test sample index")
 ax.set_ylabel("CH4 ppm")
 ax.set_title(
-    f"XGBoost CH4 prediction on full shuffled 20 % test set\n"
+    f"XGBoost CH4 prediction on normalized full shuffled 20 % test set\n"
     f"R² = {r2_ch4:.4f}"
 )
 ax.grid(True, alpha=0.3)
 ax.legend()
 
 plt.tight_layout()
-plt.savefig("xgboost_ch4_full_test_plot.png", dpi=300)
+plt.savefig("xgboost_ch4_full_test_plot_normalized.png", dpi=300)
 plt.show()
 
 
@@ -898,14 +980,14 @@ ax.plot(
 ax.set_xlabel("Full shuffled test sample index")
 ax.set_ylabel("CO2 ppm")
 ax.set_title(
-    f"XGBoost CO2 prediction on full shuffled 20 % test set\n"
+    f"XGBoost CO2 prediction on normalized full shuffled 20 % test set\n"
     f"R² = {r2_co2:.4f}"
 )
 ax.grid(True, alpha=0.3)
 ax.legend()
 
 plt.tight_layout()
-plt.savefig("xgboost_co2_full_test_plot.png", dpi=300)
+plt.savefig("xgboost_co2_full_test_plot_normalized.png", dpi=300)
 plt.show()
 
 
@@ -936,14 +1018,15 @@ ax.plot(
 ax.set_xlabel("Displayed subset test sample index")
 ax.set_ylabel("CH4 ppm")
 ax.set_title(
-    f"XGBoost CH4 prediction on displayed subset of test set ({len(plot_results_subset)} points)\n"
+    f"XGBoost CH4 prediction on normalized displayed subset of test set "
+    f"({len(plot_results_subset)} points)\n"
     f"Full test set R² = {r2_ch4:.4f}"
 )
 ax.grid(True, alpha=0.3)
 ax.legend()
 
 plt.tight_layout()
-plt.savefig("xgboost_ch4_subset_test_plot.png", dpi=300)
+plt.savefig("xgboost_ch4_subset_test_plot_normalized.png", dpi=300)
 plt.show()
 
 
@@ -974,12 +1057,13 @@ ax.plot(
 ax.set_xlabel("Displayed subset test sample index")
 ax.set_ylabel("CO2 ppm")
 ax.set_title(
-    f"XGBoost CO2 prediction on displayed subset of test set ({len(plot_results_subset)} points)\n"
+    f"XGBoost CO2 prediction on normalized displayed subset of test set "
+    f"({len(plot_results_subset)} points)\n"
     f"Full test set R² = {r2_co2:.4f}"
 )
 ax.grid(True, alpha=0.3)
 ax.legend()
 
 plt.tight_layout()
-plt.savefig("xgboost_co2_subset_test_plot.png", dpi=300)
+plt.savefig("xgboost_co2_subset_test_plot_normalized.png", dpi=300)
 plt.show()
