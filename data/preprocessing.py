@@ -1,31 +1,28 @@
 import pandas as pd
 
-# Läs in filerna
-df = pd.read_csv("data/preprocessed/test_data.csv")
+# Read files
+file1 = pd.read_csv("data/raw/test/sensor_log_20260511_211806.csv")
+file2 = pd.read_csv("DECOUPLING_LGRdata_2026-05-11.csv")
 
-df["lgr_ch4_ppm"] = (df["lgr_ch4_ppb"]/1000).round(7)
+# Start time for file 1
+start_time = pd.Timestamp("2026-05-11 21:18:06")
 
-df.to_csv("data/preprocessed/test_data.csv", index=False)
+# Make elapsed_time to real time
+file1["elapsed_time"] = pd.to_timedelta(file1["elapsed_time"])
 
-# # Starttid för fil 1
-# start_time = pd.Timestamp("2026-05-11 21:18:06")
+# Create absolute timestamps
+file1["TIMESTAMP"] = start_time + file1["elapsed_time"]
 
-# # Gör elapsed_time till riktig tid
-# file1["elapsed_time"] = pd.to_timedelta(file1["elapsed_time"])
+# Convert timestamps in file 2
+file2["TIMESTAMP"] = pd.to_datetime(file2["TIMESTAMP"])
 
-# # Skapa absoluta timestamps
-# file1["TIMESTAMP"] = start_time + file1["elapsed_time"]
+# Add LGR data to file 1 based on TIMESTAMP
+merged = pd.merge(
+    file1,
+    file2[["TIMESTAMP", "LGR_CH4", "LGR_CO2"]],
+    on="TIMESTAMP",
+    how="left"
+)
 
-# # Konvertera timestamps i fil 2
-# file2["TIMESTAMP"] = pd.to_datetime(file2["TIMESTAMP"])
-
-# # Lägg till LGR-kolumner genom timestamp-matchning
-# merged = pd.merge(
-#     file1,
-#     file2[["TIMESTAMP", "LGR_CH4", "LGR_CO2"]],
-#     on="TIMESTAMP",
-#     how="left"
-# )
-
-# # Spara ny fil
-# merged.to_csv("data/preprocessed/test/night_merged.csv", index=False)
+# Save the merged data
+merged.to_csv("some_place_on_your_computer.csv", index=False)
