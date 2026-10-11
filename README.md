@@ -15,6 +15,7 @@ The NDIR sensor is sensitive to temperature and humidity variations, leading to 
 
 ---
 ## Repository Structure
+#### Bachelor's thesis (bachelors_thesis/)
 ```
 data/
 ├── preprocessed/             Preprocessed datasets for calibration and evaluation
@@ -39,4 +40,8 @@ PlatformIO/                   Embedded firmware and sensor data acquisition
 │   ├── K96/                  NDIR methane sensor communication and data decoding
 │   └── MPX5500/              Pressure sensor interface and conversion
 └── platformio.ini            PlatformIO project configuration
+```
+#### Continued development (cont_dev/)
+```
+Data_collection_instructions/  LaTeX project containing instructions for continued data collection
 ```
