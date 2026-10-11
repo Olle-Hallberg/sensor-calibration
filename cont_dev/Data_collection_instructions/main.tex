@@ -1,0 +1,140 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Uppsala University Assignment Title Page 
+% LaTeX Template
+% Version 1.0 (27/12/12)
+%
+% This template has been downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% Original author:
+% WikiBooks (http://en.wikibooks.org/wiki/LaTeX/Title_Creation)
+% Modified by Elsa Slattegard to fit Uppsala university
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+
+%\title{Title page with logo}
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass[12pt]{article}
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{fontawesome}
+\usepackage{float}
+\setlength{\marginparwidth}{2cm}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[hidelinks]{hyperref}
+\usepackage{subcaption}
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage{listings}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray2}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{frame=tb,
+  language=Python,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=left,
+  numberstyle=\tiny\color{gray2},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  backgroundcolor=\color{backcolour},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3,
+  literate={å}{{\r a}}1 {ö}{{\"o}}1 {ä}{{\"a}}1 {Å}{{\r A}}1 {Ö}{{\"O}}1 {Ä}{{\"A}}1
+}
+
+\setlength\parindent{0pt}
+
+\begin{document}
+
+\begin{titlepage}
+
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}} % Defines a new command for the horizontal lines, change thickness here
+
+\center % Center everything on the page
+ 
+%----------------------------------------------------------------------------------------
+%	HEADING SECTIONS
+%----------------------------------------------------------------------------------------
+
+\begin{tikzpicture}[overlay, remember picture]
+    \node[anchor=north west, xshift=1cm, yshift=-1cm] at (current page.north west)
+    {
+    \includegraphics[width=2.5cm]{figs/titlepage/rexus_bexus_logo.jpg}
+    \includegraphics[width=2.5cm]{figs/titlepage/Uppsala_University_seal_svg.png}
+    };
+\end{tikzpicture}
+
+\textsc{\LARGE REXUS/BEXUS}\\[1.5cm] % Name of your university/college
+\includegraphics[scale=.2]{figs/titlepage/mirage_team_logo.png}\\[1cm] % Include a department/university logo - this will require the graphicx package
+\textsc{\Large MIRAGE}\\[0.5cm] % Major heading such as course name
+\textsc{\large Sensor Calibration}\\[0.5cm] % Minor heading such as course title
+
+%----------------------------------------------------------------------------------------
+%	TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\HRule \\[0.4cm]
+{ \huge \bfseries Data Collection Instructions}\\[0.4cm] % Title of your document
+\HRule \\[1.5cm]
+ 
+%----------------------------------------------------------------------------------------
+%	AUTHOR SECTION
+%----------------------------------------------------------------------------------------
+
+% \begin{minipage}{0.4\textwidth}
+% \begin{flushleft} \large
+% \emph{Author:}\\
+% First name \textsc{Last name}\\ % Your name
+% \end{flushleft}
+
+% \end{minipage}\\[2cm]
+
+% If you don't want a supervisor, uncomment the two lines below and remove the section above
+\large \emph{Author:}\\
+Olle \textsc{Hallberg}\\[1cm] % Your name
+
+%----------------------------------------------------------------------------------------
+%	DATE SECTION
+%----------------------------------------------------------------------------------------
+
+{\large \today}\\[2cm] % Date, change the \today to a set date if you want to be precise
+
+\vfill % Fill the rest of the page with whitespace
+
+\end{titlepage}
+
+%----------------------------------------------------------------------------------------
+%	SECTIONS SECTION
+%----------------------------------------------------------------------------------------
+
+\input{sections/0-prologue}
+
+\tableofcontents
+\newpage
+
+\input{sections/1-introduction}
+\input{sections/2-method}
+\vfill
+\input{sections/3-outro}
+
+\newpage
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}
