@@ -1,9 +1,10 @@
 # Calibration of an NDIR Gas Sensor for Stratospheric Pressure and Temperature Conditions
 >This project is part of the Methane Infrared Absorption Gas Experiment (MIRAGE). MIRAGE is Uppsala University’s submission to the Balloon Experiment for University Students (BEXUS), a programme for student experiments conducted on a balloon.
 
->This project consists of work from two stages: a bachelor's thesis and continued project development.
->- The bachelor's thesis covers the initial scope of the project and is documented in [this report](https://urn.kb.se/resolve?urn=urn:nbn:se:uu:diva-592179).
->- The continued project development builds on the bachelor's thesis.
+>This project consists of work from three stages: a bachelor's thesis, continued project development and the BEXUS launch-campaign.
+>- The bachelor's thesis covers the initial scope of the project and is documented in [this report](https://urn.kb.se/resolve?urn=urn:nbn:se:uu:diva-592179)
+>- The continued development builds on the bachelor's thesis and covers additional data collection
+>- The campaign covers the work during the launch-campaign
 
 ---
 ## Project Introduction
@@ -43,5 +44,16 @@ PlatformIO/                   Embedded firmware and sensor data acquisition
 ```
 #### Continued development (cont_dev/)
 ```
-Data_collection_instructions/  LaTeX project containing instructions for continued data collection
+Data_collection_instructions.pdf  Instructions for continued data collection
+data/
+├──
+│
+└──
+```
+#### Campaign (campaign/)
+```
+campaign/
+├──
+│
+└──
 ```
