@@ -19,6 +19,7 @@ The NDIR sensor is sensitive to temperature and humidity variations, leading to 
 #### Bachelor's thesis (bachelors_thesis/)
 ```
 data/
+│
 ├── preprocessed/             Preprocessed datasets for calibration and evaluation
 │                             Includes training, testing, and aggregated datasets
 │
@@ -26,6 +27,7 @@ data/
 │                             Includes calibration gas and nitrogen datasets
 │
 ├── analysis.py               Data visualization script
+│
 └── preprocessing.py          Data preprocessing scripts
 
 interpolation/                Interpolation-based calibration methods
@@ -33,27 +35,71 @@ interpolation/                Interpolation-based calibration methods
 ML/                           Machine learning models for sensor calibration
 
 PlatformIO/                   Embedded firmware and sensor data acquisition
+│
 ├── data_logs/                Logged sensor measurements
+│   │
 │   └── data_analysis.py      Data visualization script
+│
 ├── src/
 │   ├── Data/                 Real-time sensor data logging and export
+│   │   │
 │   │   └── serial_logger.py  Serial data acquisition and CSV logging script
+│   │
 │   ├── K96/                  NDIR methane sensor communication and data decoding
+│   │
 │   └── MPX5500/              Pressure sensor interface and conversion
+│
 └── platformio.ini            PlatformIO project configuration
 ```
 #### Continued development (cont_dev/)
 ```
 Data_collection_instructions.pdf  Instructions for continued data collection
+
 data/
-├──
 │
-└──
+├── norunda/
+│
+├── json/
+│
+├── jsonl_to_csv.py
+│
+├── csv/
+│
+├── sync_csv_by_timestamp.py
+│
+├── interpolate_csv.py
+│
+├── synced_relevant_rows/
+│   │
+│   └── interpolated/
+│
+├── plot_synced_data.py
+│
+└── plots/
 ```
 #### Campaign (campaign/)
 ```
 campaign/
-├──
 │
-└──
+├── README.md
+│
+├── thesis_raw/
+│
+├── cont_dev_raw/
+│
+├── harmonize_pool.py
+│
+├── pooled_data.csv
+│
+├── production_pipeline.py
+│
+├── k96_calibration_pipeline.joblib
+│
+├── model_development/
+│
+├── flight_data/
+│
+├── convert_sd_card_log.py
+│
+└── process_log_csv.py 
 ```
