@@ -77,29 +77,32 @@ data/
 │
 └── plots/
 ```
-#### Campaign (campaign/)
+#### Campaign (campaign/), built with AI (claude)
 ```
 campaign/
 │
-├── README.md
+├── README.md                        README for campaign/
 │
-├── thesis_raw/
+├── thesis_raw/                      Raw calibration data from the bachelor's thesis
 │
-├── cont_dev_raw/
+├── cont_dev_raw/                    Raw calibration data from the continued development
 │
-├── harmonize_pool.py
+├── harmonize_pool.py                Builds pooled_data.csv from the two raw sources
 │
-├── pooled_data.csv
+├── pooled_data.csv                  The harmonized training set
 │
-├── production_pipeline.py
+├── production_pipeline.py           Trains the calibration model + the envelope check,
+│                                    saves them to k96_calibration_pipeline.joblib
 │
-├── k96_calibration_pipeline.joblib
+├── k96_calibration_pipeline.joblib  The trained calibration model artifact
 │
-├── model_development/
+├── model_development/               The scripts and intermediate results from developing the calibration model
 │
-├── flight_data/
+├── flight_data                      Raw flight data and outputs form process_log_csv.py
 │
-├── convert_sd_card_log.py
+├── convert_sd_card_log.py           Converts an SD-card flight recording into the raw field-log CSV schema
+│                                    process_log_csv.py expects
 │
-└── process_log_csv.py 
+└── process_log_csv.py               Takes a raw field-log CSV, outputs the same CSV with CH4 and CO2 predictions,
+                                     and data-quality flags appended
 ```
