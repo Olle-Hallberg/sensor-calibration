@@ -105,5 +105,5 @@ campaign/
 │                                    raw field-log CSV schema process_log_csv.py expects
 │
 └── process_log_csv.py               Takes a raw field-log CSV, outputs the same CSV with
-                                     CH4 and CO2 predictions, and data-quality flags appended
+                                     predictions, and data-quality flags appended
 ```
