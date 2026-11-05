@@ -51,31 +51,31 @@ PlatformIO/                   Embedded firmware and sensor data acquisition
 │
 └── platformio.ini            PlatformIO project configuration
 ```
-#### Continued development (cont_dev/)
+#### Continued development (cont_dev/), built with AI 
 ```
 Data_collection_instructions.pdf  Instructions for continued data collection
 
 data/
 │
-├── norunda/
+├── norunda/                      Reference instrument data
 │
-├── json/
+├── jsonl/                        Data from K96-setup
 │
-├── jsonl_to_csv.py
+├── jsonl_to_csv.py               Converts jsonl files to CSV files
 │
-├── csv/
+├── csv/                          jsonl/ data converted to CSV
 │
-├── sync_csv_by_timestamp.py
+├── sync_csv_by_timestamp.py      Synchronizes norunda/ and csv/ data
 │
-├── interpolate_csv.py
+├── interpolate_csv.py            Interpolates short, bounded zero-runs and numeric outliers in CSV columns
 │
-├── synced_relevant_rows/
+├── synced_relevant_rows/         Synchronized data of relevant data-rows
 │   │
-│   └── interpolated/
+│   └── interpolated/             Synchronized and interpolated data of relevant data-rows
 │
-├── plot_synced_data.py
+├── plot_synced_data.py           Creates plots from synchronized data
 │
-└── plots/
+└── plots/                        Plots of data in synced_relevant_rows/ and synced_relevant_rows/interpolated/
 ```
 #### Campaign (campaign/), built with AI (Claude Sonnet 5)
 ```
