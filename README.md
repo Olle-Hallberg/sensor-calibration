@@ -77,7 +77,7 @@ data/
 │
 └── plots/
 ```
-#### Campaign (campaign/), built with AI (claude)
+#### Campaign (campaign/), built with AI (Claude Opus 5.5)
 ```
 campaign/
 │
