@@ -67,7 +67,8 @@ data/
 │
 ├── sync_csv_by_timestamp.py      Synchronizes norunda/ and csv/ data
 │
-├── interpolate_csv.py            Interpolates short, bounded zero-runs and numeric outliers in CSV columns
+├── interpolate_csv.py            Interpolates short, bounded zero-runs
+│                                 and numeric outliers in CSV columns
 │
 ├── synced_relevant_rows/         Synchronized data of relevant data-rows
 │   │
@@ -75,7 +76,8 @@ data/
 │
 ├── plot_synced_data.py           Creates plots from synchronized data
 │
-└── plots/                        Plots of data in synced_relevant_rows/ and synced_relevant_rows/interpolated/
+└── plots/                        Plots of data in synced_relevant_rows/
+                                  and synced_relevant_rows/interpolated/
 ```
 #### Campaign (campaign/), built with AI (Claude Sonnet 5)
 ```
