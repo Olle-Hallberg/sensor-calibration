@@ -96,13 +96,14 @@ campaign/
 │
 ├── k96_calibration_pipeline.joblib  The trained calibration model artifact
 │
-├── model_development/               The scripts and intermediate results from developing the calibration model
+├── model_development/               The scripts and intermediate results from developing
+│                                    the calibration model
 │
 ├── flight_data                      Raw flight data and outputs form process_log_csv.py
 │
-├── convert_sd_card_log.py           Converts an SD-card flight recording into the raw field-log CSV schema
-│                                    process_log_csv.py expects
+├── convert_sd_card_log.py           Converts an SD-card flight recording into the
+│                                    raw field-log CSV schema process_log_csv.py expects
 │
-└── process_log_csv.py               Takes a raw field-log CSV, outputs the same CSV with CH4 and CO2 predictions,
-                                     and data-quality flags appended
+└── process_log_csv.py               Takes a raw field-log CSV, outputs the same CSV with
+                                     CH4 and CO2 predictions, and data-quality flags appended
 ```
